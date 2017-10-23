@@ -1,0 +1,8 @@
+---
+# handlers file for letsencrypt
+
+- name: reload nginx
+  service: name=nginx state=reloaded
+
+- name: reload apache
+  service: name=apache state=reloaded

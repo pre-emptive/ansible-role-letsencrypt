@@ -1,0 +1,17 @@
+---
+# defaults file for letsencrypt
+docroot: /var/www/letsencrypt
+
+acme_challenge_dir: ".well-known/acme-challenge"
+
+local_cert_store: "{{ role_path }}/files"
+remote_cert_store: /etc/ssl/letsencrypt
+
+acme_url: "{{ acme_staging_url }}"
+acme_account_email: "someone@example.com"
+
+certman_enabled: no
+certman_config_directory: /etc/certman/conf.d
+
+letsencrypt_days_before_expiry: 10
+

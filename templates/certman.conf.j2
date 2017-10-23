@@ -1,0 +1,8 @@
+csr: {{ remote_cert_store }}/{{ domain }}.csr
+crt: {{ remote_cert_store }}/{{ domain }}.crt
+key: {{ remote_cert_store }}/letsencrypt-account.key
+intermediate:
+  - {{ remote_cert_store }}/lets-encrypt-x3-cross-signed.pem
+  - {{ remote_cert_store }}/lets-encrypt-x4-cross-signed.pem
+chain: {{ remote_cert_store }}/{{ domain }}.chain.pem
+days: {{ letsencrypt_days_before_expiry }}

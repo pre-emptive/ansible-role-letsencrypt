@@ -1,0 +1,56 @@
+---
+- name: "{{ domain }}: Make a domain key if required"
+  shell: openssl genrsa 4096 > {{ remote_cert_store }}/{{ domain }}.key
+  args:
+    creates: "{{ remote_cert_store }}/{{ domain }}.key"
+
+- name: "{{ domain }}: Make a domain CSR if required"
+  shell: openssl req -new -sha256 -key {{ remote_cert_store }}/{{ domain }}.key -subj "/CN={{ domain }}" > {{ remote_cert_store }}/{{ domain }}.csr
+  args:
+    creates: "{{ remote_cert_store }}/{{ domain }}.csr"
+
+- name: "{{ domain }}: Start letsencrypt process and get a challenge"
+  letsencrypt:
+    account_key: "{{ remote_cert_store }}/letsencrypt-account.key"
+    csr: "{{ remote_cert_store }}/{{ domain }}.csr"
+    dest: "{{ remote_cert_store }}/{{ domain }}.crt"
+    account_email: "{{ acme_account_email }}"
+    acme_directory: "{{ acme_url }}"
+    remaining_days: "{{ letsencrypt_days_before_expiry }}"
+  register: challenge
+
+# perform the necessary steps to fulfill the challenge
+# for example:
+#
+- name: "{{ domain }}: Insert a challenge/response"
+  copy:
+    dest: /{{ docroot }}/{{ challenge['challenge_data'][domain]['http-01']['resource'] }}
+    content: "{{ challenge['challenge_data'][domain]['http-01']['resource_value'] }}"
+  when: challenge|changed
+
+- name: "{{ domain }}: Complete the letsencrypt process and get the cert"
+  letsencrypt:
+    account_key: "{{ remote_cert_store }}/letsencrypt-account.key"
+    csr: "{{ remote_cert_store }}/{{ domain }}.csr"
+    dest: "{{ remote_cert_store }}/{{ domain }}.crt"
+    account_email: "{{ acme_account_email }}"
+    data: "{{ challenge }}"
+    acme_directory: "{{ acme_url }}"
+    remaining_days: "{{ letsencrypt_days_before_expiry }}"
+
+- name: "{{ domain }}: WORKAROUND - download intermediate certs to server"
+  get_url: url=https://letsencrypt.org/certs/{{ item }} dest={{ remote_cert_store }}/{{ item }} mode=0444
+  with_items:
+  - lets-encrypt-x3-cross-signed.pem
+  - lets-encrypt-x4-cross-signed.pem
+
+- name: "{{ domain }}: WORKAROUND - make a fullchain cert from components"
+  shell: cat {{ domain }}.key lets-encrypt-x3-cross-signed.pem lets-encrypt-x4-cross-signed.pem {{ domain }}.csr > {{ domain }}.chain.pem
+  args:
+    chdir: "{{ remote_cert_store }}"
+  when: challenge|changed
+
+- name: "{{ domain }}: Save out a certman config"
+  template: src=../templates/certman.conf.j2 dest={{ certman_config_directory }}/{{ domain }}.conf owner=root group=root mode=0644
+  when: certman_enabled
+

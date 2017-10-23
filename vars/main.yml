@@ -1,0 +1,4 @@
+---
+# vars file for letsencrypt
+acme_production_url: https://acme-v01.api.letsencrypt.org/directory
+acme_staging_url: https://acme-staging.api.letsencrypt.org/directory

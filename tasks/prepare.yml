@@ -1,0 +1,23 @@
+---
+- name: Install required packages for certman
+  yum: name={{ item }} state=installed
+  with_items:
+  - python-yaml
+  when: certman_enabled
+
+- name: Make necessary directories
+  file: path={{ item }} owner=root group=root mode=0755 state=directory
+  with_items:
+  - "{{ docroot }}"
+  - "{{ docroot }}/{{ acme_challenge_dir }}"
+  - "{{ remote_cert_store }}"
+  - "{{ certman_config_directory }}"
+
+- name: Make an account key if we don't have one
+  shell: openssl genrsa 4096 > {{ remote_cert_store}}/letsencrypt-account.key
+  args:
+    creates: "{{ remote_cert_store}}/letsencrypt-account.key"
+
+- name: Copy certman to the server
+  copy: src=../files/certman dest=/usr/local/bin/certman owner=root group=root mode=0755
+  when: certman_enabled

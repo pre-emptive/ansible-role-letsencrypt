@@ -1,0 +1,119 @@
+#!/usr/bin/python
+
+# certman - a simple script to call acme_tiny.py to renew certs with
+# letsencrypt if they're close to their renewal time.
+
+import argparse
+import sys
+import os
+import yaml
+import subprocess
+import datetime
+import collections
+
+def remove_prefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    return False
+
+# from https://stackoverflow.com/a/2158532
+def flatten(l):
+    for el in l:
+        if isinstance(el, collections.Iterable) and not isinstance(el, basestring):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
+
+def check_files_exist(files,conffile):
+  for file in files:
+    if not os.path.isfile(file):
+      print "Could not find %s from config %s - skipping this config" % (file, conffile)
+      return False
+  return True
+
+
+parser = argparse.ArgumentParser(description='Conditionally renew Letsencrypt Certs using acme_tiny')
+parser.add_argument('-c','--confdir', help='conf.d directory to look for configs', default='./conf.d')
+parser.add_argument('-a','--acmetiny', help='Location of acme_tiny.py script', default='acme_tiny.py')
+parser.add_argument('-w','--webroot', help='Location of webroot for challenge files', default='/var/www/letsencrypt/.well-known/acme-challenge')
+parser.add_argument('-l','--ca', help='URL of the CA (default is staging)', default='https://acme-staging.api.letsencrypt.org')
+args = parser.parse_args()
+
+conffiles = [f for f in os.listdir(args.confdir) if f.endswith('.conf')]
+
+certs_written = 0
+for conffile in conffiles:
+  fullpath = os.path.join(args.confdir, conffile)
+  try:
+    with open(fullpath,'r') as f:
+      conf = yaml.safe_load(f)
+  except Exception as e:
+    print "Warning: could not read %s: %s" % (fullpath, e)
+    continue
+
+  # check yaml is usable
+  files_to_check = flatten([conf['csr'],conf['crt'],conf['key'],conf['intermediate'],conf['chain']])
+  if not check_files_exist(files_to_check,conffile):
+    continue
+
+  # Now run openssl to get the expiry date of the cert
+  #"openssl x509 -enddate -noout -in %s" % (conf.crt)
+  output = subprocess.check_output(['openssl','x509','-enddate','-noout','-in',conf['crt']])
+  output = output.splitlines()[0]
+
+  notafter = remove_prefix(output, 'notAfter=')
+  if notafter:
+    # notafter is something like "Jan 17 06:21:50 2018 GMT"
+    try:
+      notafter_dt = datetime.datetime.strptime(notafter, '%b %d %H:%M:%S %Y %Z')
+    except ValueError as e:
+      print "Could not parse date from output '%s': %s" % (output, e)
+      continue
+    diff = notafter_dt - datetime.datetime.now()
+    print "%s expires in %s days" % (conf['crt'], diff.days)
+
+    if diff.days < conf['days']:
+      print "%s needs renewing" % (conf['crt'])
+      # --account-key /etc/ssl/letsencrypt/letsencrypt-account.key --csr /etc/ssl/letsencrypt/wouldyoulikeapayrise.com.csr --acme-dir /var/www/letsencrypt
+      cmd = [args.acmetiny, '--account-key', conf['key'], '--csr', conf['csr'], '--acme-dir', args.webroot, '--ca', args.ca]
+      try:
+        acmeout = subprocess.check_output(cmd)
+      except Exception as e:
+        print "Couldn't make cert: %s" % (e)
+        print "Command was: %s" % (cmd.join(' '))
+        continue
+
+      try:
+        # Now save out the generated cert
+        # we sort of assume it's always given us a cert, because
+        # anything else would be an exception
+        with open(conf['crt'], 'w') as f:
+          f.write(acmeout)
+        print "Certificate written to %s" % (conf['crt'])
+      except Exception as e:
+        print "Couldn't write cert: %s" % (e)
+        continue
+
+      try:
+        # Now also assemble a chain cert
+        chain = ""
+        for file in flatten([conf['key'],conf['intermediate']]):
+          with open(file, 'r') as f:
+            chunk = f.read()
+            chain = "%s\n%s" % (chain, chunk)
+        chain = "%s\n%s" % (chain, acmeout)
+        with open(conf['chain'], 'w') as f:
+          f.write(chain)
+        print "Chain cert written to %s" % (conf['chain'])
+      except Exception as e:
+        print "Could not write chain cert: %s" % (e)
+        continue
+
+      certs_written = certs_written + 1
+
+
+print "Successfully wrote %d new certificates" % (certs_written)
+if certs_written == 0:
+  sys.exit(1)
+sys.exit(0)

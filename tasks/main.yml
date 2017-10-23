@@ -1,0 +1,9 @@
+---
+
+- name: Prepare
+  include_tasks: "{{ role_path }}/tasks/prepare.yml"
+  when: domain is not defined
+
+- name: make cert
+  include_tasks: "{{ role_path }}/tasks/make_cert.yml"
+  when: domain is defined
