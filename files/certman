@@ -76,7 +76,7 @@ for conffile in conffiles:
     if diff.days < conf['days']:
       print "%s needs renewing" % (conf['crt'])
       # --account-key /etc/ssl/letsencrypt/letsencrypt-account.key --csr /etc/ssl/letsencrypt/wouldyoulikeapayrise.com.csr --acme-dir /var/www/letsencrypt
-      cmd = [args.acmetiny, '--account-key', conf['key'], '--csr', conf['csr'], '--acme-dir', args.webroot, '--ca', args.ca]
+      cmd = ['python', args.acmetiny, '--account-key', conf['key'], '--csr', conf['csr'], '--acme-dir', args.webroot, '--ca', args.ca]
       try:
         acmeout = subprocess.check_output(cmd)
       except Exception as e:

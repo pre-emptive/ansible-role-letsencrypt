@@ -13,5 +13,9 @@ acme_account_email: "someone@example.com"
 certman_enabled: no
 certman_config_directory: /etc/certman/conf.d
 
+letsencrypt_install_acme_tiny: no
+letsencrypt_acme_tiny_dir: /opt/acme_tiny
+letsencrypt_acme_tiny_path: "{{ letsencrypt_acme_tiny_dir }}/acme_tiny.py"
+
 letsencrypt_days_before_expiry: 10
 

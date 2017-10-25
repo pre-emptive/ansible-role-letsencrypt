@@ -21,3 +21,12 @@
 - name: Copy certman to the server
   copy: src=../files/certman dest=/usr/local/bin/certman owner=root group=root mode=0755
   when: certman_enabled
+
+- name: Install acme_tiny if required
+  git: repo='https://github.com/diafygi/acme-tiny.git' dest="{{ letsencrypt_acme_tiny_dir }}" update=no
+  when: letsencrypt_install_acme_tiny
+
+- name: Install crontab for certman
+  template: src=../templates/cron.daily.j2 dest=/etc/cron.daily/certman owner=root group=root mode=0755
+  when: certman_enabled
+

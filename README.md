@@ -50,11 +50,19 @@ The variables available are:
   * `certman_enabled` (default: no)
     If enabled, a small script (called certman) will be installed onto the remote server
     and a daily (root) crontab will be added to run it
+  * `letsencrypt_install_acme_tiny` (default: no)
+    If set to yes, then the acme_tiny Git repo will be cloned into `letsencrypt_acme_tiny_dir`
+  * `letsencrypt_acme_tiny_dir` (default: `/opt/acme_tiny`)
+    The directory acme_tiny will be installed into (note: installation is by Git clone, so it may
+    not be wise to put this in /usr/local/bin or similar)
+  * `letsencrypt_acme_tiny_path` (default: `letsencrypt_acme_tiny_dir/acme_tiny.py`)
+    The location of the acme_tiny script. If `letsencrypt_install_acme_tiny` is set, then this
+    path is used by certman to run acme_tiny. If it's not set, then the system
+    PATH is used by certman.
+
 
 Example Playbook
 ----------------
-
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
     - hosts: servers
       roles:
