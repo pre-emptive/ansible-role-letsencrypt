@@ -48,7 +48,7 @@
   - lets-encrypt-x4-cross-signed.pem
 
 - name: "{{ domain }}: WORKAROUND - make a fullchain cert from components"
-  shell: cat {{ domain }}.key lets-encrypt-x3-cross-signed.pem lets-encrypt-x4-cross-signed.pem {{ domain }}.csr > {{ domain }}.chain.pem
+  shell: cat {{ domain }}.key lets-encrypt-x3-cross-signed.pem lets-encrypt-x4-cross-signed.pem {{ domain }}.crt > {{ domain }}.chain.pem
   args:
     chdir: "{{ remote_cert_store }}"
   when: challenge|changed
