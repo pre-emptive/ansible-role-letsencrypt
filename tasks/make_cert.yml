@@ -37,6 +37,9 @@
     data: "{{ challenge }}"
     acme_directory: "{{ acme_url }}"
     remaining_days: "{{ letsencrypt_days_before_expiry }}"
+  notify:
+  - reload apache
+  - reload nginx
 
 - name: "{{ domain }}: WORKAROUND - download intermediate certs to server"
   get_url: url=https://letsencrypt.org/certs/{{ item }} dest={{ remote_cert_store }}/{{ item }} mode=0444
@@ -49,6 +52,9 @@
   args:
     chdir: "{{ remote_cert_store }}"
   when: challenge|changed
+  notify:
+  - reload apache
+  - reload nginx
 
 - name: "{{ domain }}: Save out a certman config"
   template: src=../templates/certman.conf.j2 dest={{ certman_config_directory }}/{{ domain }}.conf owner=root group=root mode=0644

@@ -3,6 +3,8 @@
 
 - name: reload nginx
   service: name=nginx state=reloaded
+  when: allow_reload_nginx
 
 - name: reload apache
   service: name=apache state=reloaded
+  when: allow_reload_apache

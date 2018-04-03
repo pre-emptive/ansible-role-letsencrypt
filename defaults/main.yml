@@ -17,5 +17,7 @@ letsencrypt_install_acme_tiny: no
 letsencrypt_acme_tiny_dir: /opt/acme_tiny
 letsencrypt_acme_tiny_path: "{{ letsencrypt_acme_tiny_dir }}/acme_tiny.py"
 
-letsencrypt_days_before_expiry: 10
+letsencrypt_days_before_expiry: 21
 
+allow_reload_apache: no
+allow_reload_nginx: no

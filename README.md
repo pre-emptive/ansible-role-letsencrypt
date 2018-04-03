@@ -13,6 +13,9 @@ Requirements
 
 You'll need a copy of acme_tiny.py from https://github.com/diafygi/acme-tiny
 
+You'll need to put your own `letsencrypt-account.key` file into `remote_cert_store` on
+the client server(s) in order to be able to use Letsencrypt.
+
 You may also may want a role of your own that `include_tasks` this one in a loop
 to run through a list of domains you'd like to work on (see below).
 
