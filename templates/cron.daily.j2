@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/usr/local/bin/certman -c {{ certman_config_directory }} {% if letsencrypt_install_acme_tiny %} -a {{ letsencrypt_acme_tiny_path }} {% endif %} >> /var/log/certman.log 2>&1
+/usr/local/bin/certman -c {{ certman_config_directory }} {% if letsencrypt_install_acme_tiny %} -a {{ letsencrypt_acme_tiny_path }} {% endif %} -l '{{ acme_url }}' >> /var/log/certman.log 2>&1

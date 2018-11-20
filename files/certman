@@ -81,7 +81,7 @@ for conffile in conffiles:
         acmeout = subprocess.check_output(cmd)
       except Exception as e:
         print "Couldn't make cert: %s" % (e)
-        print "Command was: %s" % (cmd.join(' '))
+        print "Command was: %s" % (' '.join(cmd))
         continue
 
       try:

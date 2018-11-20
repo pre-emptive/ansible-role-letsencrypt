@@ -10,7 +10,7 @@
     creates: "{{ remote_cert_store }}/{{ domain }}.csr"
 
 - name: "{{ domain }}: Start letsencrypt process and get a challenge"
-  letsencrypt:
+  acme_certificate:
     account_key: "{{ remote_cert_store }}/letsencrypt-account.key"
     csr: "{{ remote_cert_store }}/{{ domain }}.csr"
     dest: "{{ remote_cert_store }}/{{ domain }}.crt"
@@ -26,10 +26,10 @@
   copy:
     dest: /{{ docroot }}/{{ challenge['challenge_data'][domain]['http-01']['resource'] }}
     content: "{{ challenge['challenge_data'][domain]['http-01']['resource_value'] }}"
-  when: challenge|changed
+  when: challenge is changed
 
 - name: "{{ domain }}: Complete the letsencrypt process and get the cert"
-  letsencrypt:
+  acme_certificate:
     account_key: "{{ remote_cert_store }}/letsencrypt-account.key"
     csr: "{{ remote_cert_store }}/{{ domain }}.csr"
     dest: "{{ remote_cert_store }}/{{ domain }}.crt"
@@ -42,7 +42,7 @@
   - reload nginx
 
 - name: "{{ domain }}: WORKAROUND - download intermediate certs to server"
-  get_url: url=https://letsencrypt.org/certs/{{ item }} dest={{ remote_cert_store }}/{{ item }} mode=0444
+  get_url: url=https://letsencrypt.org/certs/{{ item }}.txt dest={{ remote_cert_store }}/{{ item }} mode=0444
   with_items:
   - lets-encrypt-x3-cross-signed.pem
   - lets-encrypt-x4-cross-signed.pem
@@ -52,7 +52,7 @@
   shell: cat lets-encrypt-x3-cross-signed.pem lets-encrypt-x4-cross-signed.pem > letsencrypt-chain.pem
   args:
     chdir: "{{ remote_cert_store }}"
-  when: intermediate|changed
+  when: intermediate is changed
   notify:
   - reload apache
   - reload nginx
@@ -61,7 +61,7 @@
   shell: cat {{ domain }}.crt lets-encrypt-x3-cross-signed.pem lets-encrypt-x4-cross-signed.pem > {{ domain }}.chain.pem
   args:
     chdir: "{{ remote_cert_store }}"
-  when: challenge|changed
+  when: challenge is changed
   notify:
   - reload apache
   - reload nginx
