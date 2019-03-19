@@ -17,6 +17,8 @@
     account_email: "{{ acme_account_email }}"
     acme_directory: "{{ acme_url }}"
     remaining_days: "{{ letsencrypt_days_before_expiry }}"
+    acme_version: "{{ acme_version }}"
+    terms_agreed: yes
   register: challenge
 
 # perform the necessary steps to fulfill the challenge
@@ -37,6 +39,7 @@
     data: "{{ challenge }}"
     acme_directory: "{{ acme_url }}"
     remaining_days: "{{ letsencrypt_days_before_expiry }}"
+    acme_version: "{{ acme_version }}"
   notify:
   - reload apache
   - reload nginx

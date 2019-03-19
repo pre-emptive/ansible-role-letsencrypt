@@ -9,6 +9,7 @@ remote_cert_store: /etc/ssl/letsencrypt
 
 acme_url: "{{ acme_staging_url }}"
 acme_account_email: "someone@example.com"
+acme_version: 1
 
 certman_enabled: no
 certman_config_directory: /etc/certman/conf.d
