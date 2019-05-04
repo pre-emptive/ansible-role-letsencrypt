@@ -1,8 +1,9 @@
 ---
 - name: Install required packages for certman
-  yum: name={{ item }} state=installed
-  with_items:
-  - python-yaml
+  yum: name={{ packages }} state=installed
+  vars:
+    packages:
+    - python-yaml
   when: certman_enabled
 
 - name: Make necessary directories
