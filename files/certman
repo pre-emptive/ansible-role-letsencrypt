@@ -37,7 +37,7 @@ parser = argparse.ArgumentParser(description='Conditionally renew Letsencrypt Ce
 parser.add_argument('-c','--confdir', help='conf.d directory to look for configs', default='./conf.d')
 parser.add_argument('-a','--acmetiny', help='Location of acme_tiny.py script', default='acme_tiny.py')
 parser.add_argument('-w','--webroot', help='Location of webroot for challenge files', default='/var/www/letsencrypt/.well-known/acme-challenge')
-parser.add_argument('-l','--ca', help='URL of the CA (default is staging)', default='https://acme-staging.api.letsencrypt.org')
+parser.add_argument('-l','--directory', help='URL of the Directory (default is staging)', default='https://acme-staging.api.letsencrypt.org/directory')
 args = parser.parse_args()
 
 conffiles = [f for f in os.listdir(args.confdir) if f.endswith('.conf')]
@@ -76,7 +76,7 @@ for conffile in conffiles:
     if diff.days < conf['days']:
       print "%s needs renewing" % (conf['crt'])
       # --account-key /etc/ssl/letsencrypt/letsencrypt-account.key --csr /etc/ssl/letsencrypt/wouldyoulikeapayrise.com.csr --acme-dir /var/www/letsencrypt
-      cmd = ['python', args.acmetiny, '--account-key', conf['key'], '--csr', conf['csr'], '--acme-dir', args.webroot, '--ca', args.ca]
+      cmd = ['python', args.acmetiny, '--account-key', conf['key'], '--csr', conf['csr'], '--acme-dir', args.webroot, '--directory-url', args.directory]
       try:
         acmeout = subprocess.check_output(cmd)
       except Exception as e:
